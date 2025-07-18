@@ -1,0 +1,282 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <defs>
+    <style>
+      .screen { fill: #000; stroke: #333; stroke-width: 2; }
+      .screen-text { font-family: 'Courier New', monospace; font-size: 10px; fill: #fff; }
+      .title-text { font-family: 'Courier New', monospace; font-size: 12px; fill: #fff; font-weight: bold; }
+      .label { font-family: Arial, sans-serif; font-size: 14px; fill: #333; text-anchor: middle; }
+      .menu-item { fill: #fff; stroke: #fff; stroke-width: 1; }
+      .selected { fill: #00ff00; stroke: #00ff00; stroke-width: 2; }
+      .progress-bar { fill: #00ff00; stroke: #00ff00; stroke-width: 1; }
+      .progress-bg { fill: none; stroke: #333; stroke-width: 1; }
+      .graph-line { stroke: #00ff00; stroke-width: 2; fill: none; }
+      .graph-point { fill: #00ff00; r: 2; }
+      .button { fill: #666; stroke: #888; stroke-width: 1; }
+      .button-text { font-family: 'Courier New', monospace; font-size: 8px; fill: #fff; text-anchor: middle; }
+      .animation-circle { fill: none; stroke: #00ff00; stroke-width: 2; }
+    </style>
+    
+    <!-- 动画定义 -->
+    <animateTransform id="rotate" attributeName="transform" type="rotate" 
+                      values="0 64 32;360 64 32" dur="2s" repeatCount="indefinite"/>
+    <animate id="pulse" attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite"/>
+    <animate id="progressAnim" attributeName="width" values="0;100;0" dur="3s" repeatCount="indefinite"/>
+  </defs>
+  
+  <!-- 界面1: 主菜单 -->
+  <g transform="translate(50, 50)">
+    <text x="64" y="20" class="label">主菜单</text>
+    <rect x="0" y="30" width="128" height="64" class="screen"/>
+    
+    <!-- 标题 -->
+    <text x="64" y="45" class="title-text" text-anchor="middle">智能训练锥</text>
+    
+    <!-- 菜单项 -->
+    <rect x="8" y="52" width="112" height="8" class="selected"/>
+    <text x="10" y="59" class="screen-text">1. 开始训练</text>
+    
+    <text x="10" y="70" class="screen-text">2. 历史数据</text>
+    <text x="10" y="81" class="screen-text">3. 系统设置</text>
+    
+    <!-- 光标指示 -->
+    <text x="118" y="59" class="screen-text">◄</text>
+    
+    <!-- 状态栏 -->
+    <text x="10" y="92" class="screen-text" font-size="8">就绪</text>
+    <text x="100" y="92" class="screen-text" font-size="8">12:34</text>
+  </g>
+  
+  <!-- 界面2: 开始训练 -->
+  <g transform="translate(250, 50)">
+    <text x="64" y="20" class="label">开始训练</text>
+    <rect x="0" y="30" width="128" height="64" class="screen"/>
+    
+    <!-- 标题 -->
+    <text x="64" y="45" class="title-text" text-anchor="middle">训练中...</text>
+    
+    <!-- 总训练时长 -->
+    <text x="10" y="55" class="screen-text" font-size="8">总时长:</text>
+    <text x="64" y="55" class="screen-text" font-size="8">02:15:32</text>
+    
+    <!-- 上次用时 -->
+    <text x="10" y="65" class="screen-text" font-size="8">上次:</text>
+    <text x="64" y="65" class="screen-text" font-size="8">2.456秒</text>
+    
+    <!-- 动画进度条 -->
+    <rect x="10" y="72" width="108" height="6" class="progress-bg"/>
+    <rect x="10" y="72" width="54" height="6" class="progress-bar">
+      <animate attributeName="width" values="0;108;0" dur="3s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- 动画圆环 -->
+    <circle cx="64" cy="85" r="8" class="animation-circle">
+      <animateTransform attributeName="transform" type="rotate" 
+                        values="0 64 85;360 64 85" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- 状态指示 -->
+    <text x="64" y="89" class="screen-text" font-size="8" text-anchor="middle">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite"/>
+      活跃
+    </text>
+  </g>
+  
+  <!-- 界面3: 历史数据 -->
+  <g transform="translate(450, 50)">
+    <text x="64" y="20" class="label">历史数据</text>
+    <rect x="0" y="30" width="128" height="64" class="screen"/>
+    
+    <!-- 标题 -->
+    <text x="64" y="45" class="title-text" text-anchor="middle">训练统计</text>
+    
+    <!-- 统计数据 -->
+    <text x="10" y="55" class="screen-text" font-size="8">总时长: 05:42:18</text>
+    <text x="10" y="65" class="screen-text" font-size="8">平均: 2.234s</text>
+    <text x="10" y="75" class="screen-text" font-size="8">本周进步: ↑8.2%</text>
+    
+    <!-- 简单图表 -->
+    <polyline points="10,85 25,82 40,78 55,75 70,73 85,70 100,68 115,65" 
+              class="graph-line"/>
+    <circle cx="10" cy="85" class="graph-point"/>
+    <circle cx="25" cy="82" class="graph-point"/>
+    <circle cx="40" cy="78" class="graph-point"/>
+    <circle cx="55" cy="75" class="graph-point"/>
+    <circle cx="70" cy="73" class="graph-point"/>
+    <circle cx="85" cy="70" class="graph-point"/>
+    <circle cx="100" cy="68" class="graph-point"/>
+    <circle cx="115" cy="65" class="graph-point"/>
+    
+    <!-- 坐标轴 -->
+    <line x1="10" y1="92" x2="118" y2="92" stroke="#666" stroke-width="1"/>
+    <text x="64" y="92" class="screen-text" font-size="6" text-anchor="middle">本周趋势</text>
+  </g>
+  
+  <!-- 界面4: 系统设置 -->
+  <g transform="translate(650, 50)">
+    <text x="64" y="20" class="label">系统设置</text>
+    <rect x="0" y="30" width="128" height="64" class="screen"/>
+    
+    <!-- 标题 -->
+    <text x="64" y="45" class="title-text" text-anchor="middle">系统设置</text>
+    
+    <!-- MAC地址 -->
+    <text x="10" y="55" class="screen-text" font-size="7">MAC:AA:BB:CC:DD:EE:01</text>
+    
+    <!-- 声音开关 -->
+    <text x="10" y="65" class="screen-text" font-size="8">声音: [开启] 关闭</text>
+    
+    <!-- LED颜色 -->
+    <text x="10" y="75" class="screen-text" font-size="8">LED: 红 [绿] 蓝</text>
+    
+    <!-- 日期设置 -->
+    <text x="10" y="85" class="screen-text" font-size="8">日期: 2024-07-16</text>
+    
+    <!-- 达标提醒时长 -->
+    <text x="10" y="95" class="screen-text" font-size="8">达标提醒: 10分钟</text>
+    
+    <!-- 选择指示器 -->
+    <rect x="40" y="60" width="16" height="8" class="selected"/>
+  </g>
+  
+  <!-- 界面5: 训练状态详细显示 -->
+  <g transform="translate(50, 250)">
+    <text x="64" y="20" class="label">训练状态详细 (Training Status)</text>
+    <rect x="0" y="30" width="128" height="64" class="screen"/>
+    
+    <!-- 大字体时间显示 -->
+    <text x="64" y="50" class="title-text" text-anchor="middle" font-size="16">2.456</text>
+    <text x="64" y="62" class="screen-text" text-anchor="middle" font-size="8">秒</text>
+    
+    <!-- 状态栏 -->
+    <text x="10" y="75" class="screen-text" font-size="8">第12次</text>
+    <text x="64" y="75" class="screen-text" font-size="8" text-anchor="middle">MASTER</text>
+    <text x="105" y="75" class="screen-text" font-size="8">连接OK</text>
+    
+    <!-- 电池电量 -->
+    <rect x="10" y="85" width="20" height="6" class="progress-bg"/>
+    <rect x="10" y="85" width="16" height="6" class="progress-bar"/>
+    <text x="35" y="90" class="screen-text" font-size="6">80%</text>
+    
+    <!-- 信号强度 -->
+    <rect x="95" y="87" width="2" height="2" class="menu-item"/>
+    <rect x="98" y="85" width="2" height="4" class="menu-item"/>
+    <rect x="101" y="83" width="2" height="6" class="menu-item"/>
+    <rect x="104" y="81" width="2" height="8" class="menu-item"/>
+    <text x="115" y="90" class="screen-text" font-size="6">WiFi</text>
+  </g>
+  
+  <!-- 界面6: 错误/警告界面 -->
+  <g transform="translate(250, 250)">
+    <text x="64" y="20" class="label">错误提示 (Error Alert)</text>
+    <rect x="0" y="30" width="128" height="64" class="screen"/>
+    
+    <!-- 错误标题 -->
+    <text x="64" y="45" class="title-text" text-anchor="middle">！警告！</text>
+    
+    <!-- 错误信息 -->
+    <text x="64" y="58" class="screen-text" text-anchor="middle" font-size="8">通信中断</text>
+    <text x="64" y="68" class="screen-text" text-anchor="middle" font-size="8">检查对方设备</text>
+    
+    <!-- 闪烁边框 -->
+    <rect x="5" y="35" width="118" height="54" fill="none" stroke="#ff0000" stroke-width="2">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="0.5s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- 确认按钮 -->
+    <rect x="44" y="78" width="40" height="12" class="button"/>
+    <text x="64" y="87" class="button-text" text-anchor="middle">确认</text>
+  </g>
+  
+  <!-- 界面7: 配对界面 -->
+  <g transform="translate(450, 250)">
+    <text x="64" y="20" class="label">设备配对 (Device Pairing)</text>
+    <rect x="0" y="30" width="128" height="64" class="screen"/>
+    
+    <!-- 配对标题 -->
+    <text x="64" y="45" class="title-text" text-anchor="middle">正在配对...</text>
+    
+    <!-- 搜索动画 -->
+    <circle cx="64" cy="60" r="4" class="animation-circle">
+      <animate attributeName="r" values="4;12;4" dur="1.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="64" cy="60" r="8" class="animation-circle">
+      <animate attributeName="r" values="8;16;8" dur="1.5s" begin="0.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" begin="0.5s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- 状态信息 -->
+    <text x="64" y="78" class="screen-text" text-anchor="middle" font-size="8">寻找设备中...</text>
+    <text x="64" y="88" class="screen-text" text-anchor="middle" font-size="7">按ESC取消</text>
+  </g>
+  
+  <!-- 界面8: 设置详细页面 -->
+  <g transform="translate(650, 250)">
+    <text x="64" y="20" class="label">详细设置 (Detailed Settings)</text>
+    <rect x="0" y="30" width="128" height="64" class="screen"/>
+    
+    <!-- 设置标题 -->
+    <text x="64" y="45" class="title-text" text-anchor="middle">LED颜色</text>
+    
+    <!-- 颜色选择 -->
+    <rect x="20" y="52" width="16" height="8" fill="#ff0000"/>
+    <rect x="40" y="52" width="16" height="8" fill="#00ff00" class="selected"/>
+    <rect x="60" y="52" width="16" height="8" fill="#0000ff"/>
+    <rect x="80" y="52" width="16" height="8" fill="#ffff00"/>
+    
+    <!-- 颜色名称 -->
+    <text x="28" y="70" class="screen-text" font-size="6" text-anchor="middle">红</text>
+    <text x="48" y="70" class="screen-text" font-size="6" text-anchor="middle">绿</text>
+    <text x="68" y="70" class="screen-text" font-size="6" text-anchor="middle">蓝</text>
+    <text x="88" y="70" class="screen-text" font-size="6" text-anchor="middle">黄</text>
+    
+    <!-- 亮度调节 -->
+    <text x="10" y="82" class="screen-text" font-size="8">亮度:</text>
+    <rect x="40" y="78" width="70" height="4" class="progress-bg"/>
+    <rect x="40" y="78" width="42" height="4" class="progress-bar"/>
+    <text x="115" y="82" class="screen-text" font-size="8">60%</text>
+    
+    <!-- 导航提示 -->
+    <text x="64" y="92" class="screen-text" font-size="6" text-anchor="middle">← → 选择  OK 确认</text>
+  </g>
+  
+  <!-- 控制说明 -->
+  <g transform="translate(50, 450)">
+    <text x="0" y="20" class="label">控制说明 (Control Instructions)</text>
+    
+    <text x="0" y="50" class="screen-text" fill="#333">界面导航:</text>
+    <text x="0" y="70" class="screen-text" fill="#333">• 上/下键：菜单选择</text>
+    <text x="0" y="85" class="screen-text" fill="#333">• 确认键：进入选项</text>
+    <text x="0" y="100" class="screen-text" fill="#333">• 返回键：返回上级菜单</text>
+    <text x="0" y="115" class="screen-text" fill="#333">• 长按确认键：快速开始训练</text>
+    
+    <text x="300" y="50" class="screen-text" fill="#333">显示特性:</text>
+    <text x="300" y="70" class="screen-text" fill="#333">• 128x64像素单色OLED</text>
+    <text x="300" y="85" class="screen-text" fill="#333">• 支持中英文显示</text>
+    <text x="300" y="100" class="screen-text" fill="#333">• 动画效果增强用户体验</text>
+    <text x="300" y="115" class="screen-text" fill="#333">• 自适应亮度调节</text>
+  </g>
+  
+  <!-- 技术参数 -->
+  <g transform="translate(50, 600)">
+    <text x="0" y="20" class="label">技术参数 (Technical Specifications)</text>
+    
+    <text x="0" y="50" class="screen-text" fill="#333">显示规格:</text>
+    <text x="0" y="70" class="screen-text" fill="#333">• 分辨率: 128x64像素</text>
+    <text x="0" y="85" class="screen-text" fill="#333">• 驱动芯片: SSD1306</text>
+    <text x="0" y="100" class="screen-text" fill="#333">• 接口: I2C</text>
+    <text x="0" y="115" class="screen-text" fill="#333">• 刷新率: 60Hz</text>
+    
+    <text x="300" y="50" class="screen-text" fill="#333">字体支持:</text>
+    <text x="300" y="70" class="screen-text" fill="#333">• 英文: 6x8, 8x16像素</text>
+    <text x="300" y="85" class="screen-text" fill="#333">• 中文: 12x12, 16x16像素</text>
+    <text x="300" y="100" class="screen-text" fill="#333">• 图标: 自定义位图</text>
+    <text x="300" y="115" class="screen-text" fill="#333">• 动画: 帧动画支持</text>
+    
+    <text x="600" y="50" class="screen-text" fill="#333">功耗特性:</text>
+    <text x="600" y="70" class="screen-text" fill="#333">• 正常显示: 20mA</text>
+    <text x="600" y="85" class="screen-text" fill="#333">• 节能模式: 5mA</text>
+    <text x="600" y="100" class="screen-text" fill="#333">• 休眠模式: 1mA</text>
+    <text x="600" y="115" class="screen-text" fill="#333">• 亮度可调: 5级</text>
+  </g>
+</svg>
