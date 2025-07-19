@@ -1,5 +1,6 @@
 #include "hardware.h"
 #include "menu.h"
+#include "time_manager.h"
 
 // 全局硬件管理类对象
 HardwareManager hardware;
@@ -319,19 +320,24 @@ void HardwareManager::displayHistoryData() {
     u8g2.setCursor(40, 12);
     u8g2.print("训练统计");
     
-    // 显示统计数据（模拟数据）
-    u8g2.setCursor(5, 30);
-    u8g2.print("总时长: 02:15:30");
+    // 显示当前时间
+    String currentTime = timeManager.formatTime("%H:%M:%S");
+    u8g2.setCursor(5, 25);
+    u8g2.printf("当前时间: %s", currentTime.c_str());
     
-    u8g2.setCursor(5, 45);
-    u8g2.print("平均用时: 5.234 秒");
+    // 显示今日日期
+    String currentDate = timeManager.formatTime("%Y-%m-%d");
+    u8g2.setCursor(5, 40);
+    u8g2.printf("今日日期: %s", currentDate.c_str());
     
-    u8g2.setCursor(5, 60);
-    u8g2.print("本周进步: ↑12.5%");
+    // 显示系统运行时间
+    unsigned long uptime = millis() / 1000;
+    u8g2.setCursor(5, 55);
+    u8g2.printf("运行时间: %02lu:%02lu:%02lu", uptime / 3600, (uptime % 3600) / 60, uptime % 60);
     
     u8g2.sendBuffer();
 #else
-    Serial.println("历史数据: 总时长: 02:15:30, 平均用时: 5.234秒, 本周进步: ↑12.5%");
+    Serial.printf("训练统计 - 当前时间: %s\n", timeManager.formatTime("%Y-%m-%d %H:%M:%S").c_str());
 #endif
 }
 
@@ -347,7 +353,7 @@ void HardwareManager::displaySystemSettings() {
     uint8_t mac[6];
     WiFi.macAddress(mac);
     u8g2.setCursor(5, 30);
-    u8g2.printf("MAC: %02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    u8g2.printf("MAC:  %02X : %02X : %02X : %02X : %02X : %02X ", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     
     // 显示声音设置
     u8g2.setCursor(5, 45);
@@ -363,12 +369,6 @@ void HardwareManager::displaySystemSettings() {
 #endif
 }
 
-unsigned long HardwareManager::formatTime(unsigned long ms) {
-    char buffer[8];
-    unsigned long seconds = ms / 1000;
-    snprintf(buffer, sizeof(buffer), "%02lu:%02lu", seconds / 60, seconds % 60);
-    return 0;
-}
 
 // ==================== 系统设置功能实现 ====================
 
@@ -387,7 +387,7 @@ void HardwareManager::displaySystemSettingsMenu(int selectedIndex) {
     uint8_t mac[6];
     WiFi.macAddress(mac);
     u8g2.setCursor(5, 23);
-    u8g2.printf("MAC:%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    u8g2.printf("MAC:  %02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     
     // 设置选项
     const char* settingsItems[] = {
@@ -600,18 +600,22 @@ void HardwareManager::displayDateTimeAdjustment(int year, int month, int day, in
     u8g2.setCursor(40, 12);
     u8g2.print("日期时间");
     
-    // 日期显示
-    u8g2.setCursor(5, 30);
-    u8g2.printf("日期: %04d-%02d-%02d", year, month, day);
+    // 显示实时时间
+    String currentTime = timeManager.formatTime("%Y-%m-%d %H:%M:%S");
+    u8g2.setCursor(5, 25);
+    u8g2.printf("当前: %s", currentTime.c_str());
     
-    // 时间显示
-    u8g2.setCursor(5, 45);
-    u8g2.printf("时间: %02d:%02d", hour, minute);
+    // 时区信息
+    u8g2.setCursor(5, 40);
+    u8g2.printf("时区: UTC+8 (北京时间)");
     
+    // NTP同步状态
+    u8g2.setCursor(5, 55);
+    u8g2.printf("NTP: %s", timeManager.isTimeValid() ? "已同步" : "未同步");
     
     u8g2.sendBuffer();
 #else
-    Serial.printf("日期时间: %04d-%02d-%02d %02d:%02d\n", year, month, day, hour, minute);
+    Serial.printf("当前时间: %s\n", timeManager.formatTime("%Y-%m-%d %H:%M:%S").c_str());
 #endif
 }
 
@@ -643,14 +647,25 @@ void HardwareManager::initializeSettings() {
     systemSettings.soundEnabled = DEFAULT_SOUND_ENABLED;
     systemSettings.ledColor = DEFAULT_LED_COLOR;
     systemSettings.ledBrightness = DEFAULT_LED_BRIGHTNESS;
-    systemSettings.year = 2024;
-    systemSettings.month = 7;
-    systemSettings.day = 18;
-    systemSettings.hour = 12;
-    systemSettings.minute = 0;
+    
+    // 使用时间管理器获取当前时间
+    if (timeManager.isTimeValid()) {
+        timeManager.updateSystemSettings(&systemSettings);
+    } else {
+        // 如果时间无效，使用默认值
+        systemSettings.year = 2024;
+        systemSettings.month = 7;
+        systemSettings.day = 18;
+        systemSettings.hour = 12;
+        systemSettings.minute = 0;
+    }
+    
     systemSettings.alertDuration = DEFAULT_ALERT_DURATION;
     
     Serial.println("系统设置初始化完成");
+    Serial.printf("当前时间: %04d-%02d-%02d %02d:%02d\n", 
+                  systemSettings.year, systemSettings.month, systemSettings.day, 
+                  systemSettings.hour, systemSettings.minute);
 }
 
 void HardwareManager::saveSettings() {

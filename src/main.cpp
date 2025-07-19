@@ -6,6 +6,7 @@
 #include "menu.h"
 #include "vibration_training.h"
 #include "ButtonManager.h"
+#include "time_manager.h"
 
 // 全局变量
 SystemState currentState = STATE_INIT;
@@ -55,6 +56,14 @@ void setup() {
     // 初始化菜单
     menu.init();
     
+// 初始化时间管理器
+    if (!timeManager.init()) {
+        Serial.println("时间管理器初始化失败!");
+    } else {
+        Serial.println("时间管理器初始化成功!");
+        timeManager.printTimeInfo();
+    }
+
     // 初始化按键管理器
     buttonManager.init();
     buttonManager.attachSingleClick(onSingleClick);
