@@ -37,9 +37,9 @@ bool HardwareManager::init() {
     pinMode(BUTTON_PIN, INPUT_PULLDOWN);
     Serial.println("按钮引脚初始化完成（高电平触发）");
     
-    // 初始化震动传感器引脚
-    pinMode(VIBRATION_SENSOR_PIN, INPUT);
-    Serial.println("震动传感器引脚初始化完成");
+    // 初始化震动传感器引脚 (常闭开关量传感器，使用内部上拉电阻)
+    pinMode(VIBRATION_SENSOR_PIN, INPUT_PULLUP);
+    Serial.println("震动传感器引脚初始化完成（常闭开关量传感器）");
     
     // 初始化蜂鸣器引脚
     pinMode(BUZZER_PIN, OUTPUT);
@@ -111,16 +111,52 @@ void HardwareManager::ledAlertEffect() {
 }
 
 bool HardwareManager::isVibrationDetected() {
-    int strength = getVibrationStrength();
-    if (strength > VIBRATION_THRESHOLD && millis() - lastVibrationTime > VIBRATION_DEBOUNCE_MS) {
-        lastVibrationTime = millis();
-        return true;
+    static bool lastState = HIGH;  // 常闭传感器正常状态为HIGH
+    static unsigned long lastTriggerTime = 0;
+    
+    // 读取数字量状态
+    bool currentState = digitalRead(VIBRATION_SENSOR_PIN);
+    
+    // 每次都输出当前状态用于调试
+    static unsigned long lastDebugTime = 0;
+    if (millis() - lastDebugTime > 100) {  // 每100ms输出一次状态变化
+        Serial.printf("主机震动检测调试: lastState=%s, currentState=%s\n", 
+                     lastState ? "HIGH" : "LOW", currentState ? "HIGH" : "LOW");
+        lastDebugTime = millis();
     }
+    
+    // 检测从HIGH到LOW的下降沿（震动触发）
+    if (lastState == HIGH && currentState == LOW) {
+        Serial.printf("主机检测到边沿变化: HIGH->LOW, 防抖检查中...\n");
+        
+        // 防抖检查
+        if (millis() - lastTriggerTime > VIBRATION_DEBOUNCE_MS) {
+            lastTriggerTime = millis();
+            lastState = currentState;
+            
+            Serial.printf("*** 主机震动检测到! 传感器状态: HIGH->LOW ***\n");
+            
+            // 震动检测视觉反馈
+            setAllLEDs(COLOR_RED);
+            showLEDs();
+            playStartSound();
+            delay(100);
+            clearLEDs();
+            showLEDs();
+            
+            return true;
+        } else {
+            Serial.printf("主机防抖未通过: 距离上次触发仅 %lu ms\n", millis() - lastTriggerTime);
+        }
+    }
+    
+    lastState = currentState;
     return false;
 }
 
 int HardwareManager::getVibrationStrength() {
-    return analogRead(VIBRATION_SENSOR_PIN);
+    // 对于开关量传感器，返回数字状态 (HIGH=1, LOW=0)
+    return digitalRead(VIBRATION_SENSOR_PIN) ? 1 : 0;
 }
 
 
@@ -247,7 +283,17 @@ void HardwareManager::displayResult(unsigned long time, const char* result) {
 }
 
 void HardwareManager::updateVibration() {
-    // 震动传感器更新逻辑
+    // 开关量震动传感器监控逻辑
+    static unsigned long lastStatusCheck = 0;
+    
+    // 每500ms输出一次传感器状态用于调试
+    if (millis() - lastStatusCheck >= 500) {
+        lastStatusCheck = millis();
+        
+        bool sensorState = digitalRead(VIBRATION_SENSOR_PIN);
+        Serial.printf("震动传感器状态: %s (常闭传感器: HIGH=正常, LOW=震动)\n", 
+                     sensorState ? "HIGH" : "LOW");
+    }
 }
 
 

@@ -3,37 +3,22 @@
 
 #include <stdint.h>
 
-// 硬件引脚定义
+// 硬件引脚定义 - 仅从机设备需要的硬件
 #define VIBRATION_SENSOR_PIN    2     // 震动传感器引脚
-#define BUTTON_PIN              5     // 按钮引脚 (GPIO5，高电平触发)
 #define LED_PIN                 1     // WS2812B LED引脚
 #define BUZZER_PIN              4     // 蜂鸣器引脚
-#define OLED_SDA_PIN            8     // OLED SDA引脚
-#define OLED_SCL_PIN            9     // OLED SCL引脚
 
 // LED配置
 #define LED_COUNT               12    // LED数量
 #define LED_BRIGHTNESS          50    // LED亮度 (0-255)
 
-// OLED配置
-#define OLED_WIDTH              128   // OLED宽度
-#define OLED_HEIGHT             64    // OLED高度
-#define OLED_RESET_PIN          -1    // OLED复位引脚
-
 // 震动传感器配置
 #define VIBRATION_SENSOR_TYPE   0     // 0=常闭开关量传感器，1=数值传感器
 #define VIBRATION_DEBOUNCE_MS   200   // 震动防抖时间 (开关量传感器需要更长防抖)
 
-// 按钮配置
-#define BUTTON_DEBOUNCE_MS      50    // 按钮防抖时间
-#define BUTTON_CLICK_MS         400   // 点击间隔时间（双击检测窗口）
-#define BUTTON_DOUBLE_CLICK_MS  300   // 双击时间间隔 (ms)
-#define BUTTON_LONG_PRESS_MS    1000  // 长按时间阈值
-
 // 计时配置
 #define TIMING_READY_DELAY_MS   3000  // 准备时间
 #define TIMING_TIMEOUT_MS       30000 // 超时时间
-#define TIMING_ALERT_INTERVAL   5000  // 提醒间隔
 
 // ESP-NOW配置
 #define ESPNOW_CHANNEL          1     // ESP-NOW信道
@@ -45,31 +30,14 @@
 #define BEEP_FREQUENCY          2000  // 蜂鸣器频率
 #define BEEP_DURATION           100   // 蜂鸣器持续时间
 
-// 系统状态
-enum SystemState {
-    STATE_INIT,           // 初始化
-    STATE_MENU,           // 菜单模式
-    STATE_READY,          // 准备状态
-    STATE_TRAINING,       // 训练中
-    STATE_TIMING,         // 计时中
-    STATE_COMPLETE,       // 完成
-    STATE_ERROR           // 错误
-};
-
-// 训练模式
-enum TrainingMode {
-    MODE_SINGLE_TIMER,    // 单次计时
-    MODE_VIBRATION_TRAINING, // 震动训练
-    MODE_DUAL_TRAINING,   // 双设备训练
-    MODE_SETTINGS         // 设置模式
-};
-
-// 菜单项
-enum MenuItems {
-    MENU_START_TRAINING,
-    MENU_HISTORY_DATA,
-    MENU_SYSTEM_SETTINGS,
-    MENU_ITEM_COUNT
+// 从机设备状态
+enum SlaveState {
+    SLAVE_INIT,           // 初始化
+    SLAVE_IDLE,           // 空闲等待
+    SLAVE_READY,          // 准备状态
+    SLAVE_TRAINING,       // 训练中
+    SLAVE_COMPLETE,       // 完成
+    SLAVE_ERROR           // 错误
 };
 
 // 设备角色
@@ -95,10 +63,8 @@ enum CommandType {
     CMD_START_TASK = 0x02,
     CMD_TASK_COMPLETE = 0x03,
     CMD_RESET = 0x04,
-    CMD_ROLE_SWITCH = 0x05,
     CMD_HEARTBEAT = 0x06,
     CMD_HEARTBEAT_ACK = 0x07,
-    CMD_CONNECTION_CHECK = 0x08,
     CMD_PAIRING_REQUEST = 0x10,
     CMD_PAIRING_RESPONSE = 0x11,
     CMD_PAIRING_CONFIRM = 0x12,
@@ -160,72 +126,5 @@ typedef struct {
 #define COLOR_PURPLE            0xFF00FF
 #define COLOR_CYAN              0x00FFFF
 #define COLOR_ORANGE            0xFF8000
-
-// 系统设置项
-enum SettingsItems {
-    SETTING_SOUND_TOGGLE,
-    SETTING_LED_COLOR,
-    SETTING_LED_BRIGHTNESS,
-    SETTING_DATE_TIME,
-    SETTING_ALERT_DURATION,
-    SETTING_DEVICE_PAIRING,
-    SETTING_BACK,
-    SETTING_ITEM_COUNT
-};
-
-// LED颜色选项
-enum LedColorOption {
-    LED_COLOR_RED,
-    LED_COLOR_GREEN,
-    LED_COLOR_BLUE,
-    LED_COLOR_YELLOW,
-    LED_COLOR_PURPLE,
-    LED_COLOR_CYAN,
-    LED_COLOR_COUNT
-};
-
-// 训练数据记录结构
-typedef struct {
-    uint32_t timestamp;     // 时间戳
-    uint32_t duration;      // 训练持续时间 (毫秒)
-    uint8_t mode;          // 训练模式
-    bool completed;        // 是否完成
-} TrainingRecord;
-
-// 训练统计数据结构
-typedef struct {
-    uint32_t totalTrainingTime;    // 总训练时长 (毫秒)
-    uint32_t totalSessions;        // 总训练次数
-    uint32_t averageTime;          // 平均用时 (毫秒)
-    uint32_t bestTime;             // 最佳时间 (毫秒)
-    uint32_t weeklyProgress;       // 本周进步 (百分比*100)
-    bool progressIncreasing;       // 进步方向 (true=上升, false=下降)
-    uint32_t weeklyTrend[7];       // 本周每日平均时间 (毫秒)
-} TrainingStats;
-
-// 历史数据配置
-#define MAX_TRAINING_RECORDS    50    // 最大记录数
-#define WEEKLY_TREND_POINTS     8     // 趋势图数据点数量
-
-// 系统设置结构
-typedef struct {
-    bool soundEnabled;
-    LedColorOption ledColor;
-    uint8_t ledBrightness;  // 0-100
-    uint16_t year;
-    uint8_t month;
-    uint8_t day;
-    uint8_t hour;
-    uint8_t minute;
-    uint16_t alertDuration; // 达标提醒时长，秒
-    uint8_t pairedDeviceMac[6]; // 已配对设备的MAC地址
-    bool hasPairedDevice; // 是否有配对设备
-} SystemSettings;
-
-// 默认设置
-#define DEFAULT_SOUND_ENABLED   true
-#define DEFAULT_LED_COLOR       LED_COLOR_GREEN
-#define DEFAULT_LED_BRIGHTNESS  60
-#define DEFAULT_ALERT_DURATION  30
 
 #endif // CONFIG_H

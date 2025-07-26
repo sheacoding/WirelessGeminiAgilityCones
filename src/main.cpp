@@ -283,9 +283,21 @@ void onDataReceived(const esp_now_recv_info* recv_info, const uint8_t* data, int
             
         case CMD_VT_START_ROUND:
             // 主机收到从机的开始信号
+            Serial.println("=== 收到 CMD_VT_START_ROUND 消息 ===");
             if (deviceRole == ROLE_MASTER) {
+                Serial.printf("主机设备角色确认，调用handleSlaveComplete，数据: %lu\n", message.data);
                 vibrationTraining.handleSlaveComplete(message.data);
                 Serial.println("主机收到从机开始计时信号");
+            } else {
+                Serial.printf("设备角色不是主机，当前角色: %d\n", deviceRole);
+            }
+            break;
+
+        case CMD_VT_ROUND_COMPLETE:
+            // 从机收到主机的完成信号
+            if (deviceRole == ROLE_SLAVE) {
+                vibrationTraining.handleRoundComplete(message.data);
+                Serial.println("从机收到主机完成信号");
             }
             break;
     }
@@ -296,9 +308,12 @@ void onDataSent(const uint8_t* mac, esp_now_send_status_t status) {
 }
 
 void handleVibrationTraining() {
+    Serial.printf("handleVibrationTraining() 被调用，菜单模式: %d\n", menu.getCurrentMode());
+    
     switch (menu.getCurrentMode()) {
         case MODE_SINGLE_TIMER:
             // 单次计时模式
+            Serial.println("处理MODE_SINGLE_TIMER模式");
             if (currentState == STATE_TIMING) {
                 vibrationTraining.update();
                 if (vibrationTraining.isCompleted()) {
@@ -310,6 +325,7 @@ void handleVibrationTraining() {
             
         case MODE_VIBRATION_TRAINING:
             // 震动训练模式
+            Serial.println("处理MODE_VIBRATION_TRAINING模式");
             if (currentState == STATE_TIMING) {
                 vibrationTraining.update();
                 if (vibrationTraining.isCompleted()) {
@@ -320,6 +336,7 @@ void handleVibrationTraining() {
             
         case MODE_DUAL_TRAINING:
             // 双设备训练模式
+            Serial.println("处理MODE_DUAL_TRAINING模式");
             handleDualTraining();
             break;
     }
@@ -381,6 +398,7 @@ void updateSystem() {
             break;
             
         case STATE_TIMING:
+            Serial.println("系统在STATE_TIMING状态，调用handleVibrationTraining()");
             handleVibrationTraining();
             break;
             
@@ -397,12 +415,14 @@ void updateSystem() {
 }
 
 void startTraining() {
-    Serial.println("开始训练...");
+    Serial.println("=== startTraining() 被调用 ===");
+    Serial.printf("当前系统状态: %d (STATE_READY=%d)\n", currentState, STATE_READY);
     
     // 检查当前状态是否允许开始训练
     if (currentState == STATE_READY) {
         // 切换到计时状态
         currentState = STATE_TIMING;
+        Serial.printf("系统状态切换到: %d (STATE_TIMING=%d)\n", currentState, STATE_TIMING);
         
         // 播放开始音效
         if (hardware.getSettings()->soundEnabled) {
@@ -417,11 +437,12 @@ void startTraining() {
         hardware.displayStatus("训练开始！");
         
         // 启动震动训练
+        Serial.println("调用 vibrationTraining.start()");
         vibrationTraining.start();
         
         Serial.println("训练状态切换完成");
     } else {
-        Serial.println("当前状态不允许开始训练");
+        Serial.printf("当前状态不允许开始训练，当前状态: %d\n", currentState);
     }
 }
 

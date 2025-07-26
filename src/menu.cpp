@@ -1,5 +1,8 @@
 #include "menu.h"
 
+// 外部变量声明
+extern DeviceRole deviceRole;
+
 MenuManager menu;
 
 const char* MenuManager::menuItems[] = {
@@ -192,7 +195,7 @@ void MenuManager::showSettingsDetail() {
             progressLeds = (hardware.getSettings()->ledBrightness * LED_COUNT) / 100;
             break;
         case SETTING_ALERT_DURATION:
-            progressLeds = (hardware.getSettings()->alertDuration * LED_COUNT) / 60; // 假设最大60分钟
+            progressLeds = (hardware.getSettings()->alertDuration * LED_COUNT) / 300; // 假设最大300秒（5分钟）
             break;
         default:
             progressLeds = LED_COUNT / 2; // 默认一半
@@ -209,8 +212,14 @@ void MenuManager::showSettingsDetail() {
 void MenuManager::handleMenuSelection() {
     switch (currentMenuItem) {
         case MENU_START_TRAINING:
-            currentMode = MODE_SINGLE_TIMER;
-            Serial.println("选择了开始训练");
+            // 根据设备配置选择合适的训练模式
+            if (deviceRole == ROLE_MASTER || deviceRole == ROLE_SLAVE) {
+                currentMode = MODE_VIBRATION_TRAINING;  // 主从设备配合的震动训练
+                Serial.println("选择了震动训练模式");
+            } else {
+                currentMode = MODE_SINGLE_TIMER;  // 单设备计时模式
+                Serial.println("选择了单设备计时模式");
+            }
             menuActive = false;  // 隐藏菜单，但状态切换由主循环控制
             break;
             
@@ -248,6 +257,9 @@ void MenuManager::handleSettingsSelection() {
             break;
         case SETTING_ALERT_DURATION:
             adjustmentValue = hardware.getSettings()->alertDuration;
+            break;
+        case SETTING_DEVICE_PAIRING:
+            adjustmentValue = 0;
             break;
         default:
             adjustmentValue = 0;
@@ -297,13 +309,27 @@ void MenuManager::handleSettingsAdjustment(bool increase) {
             break;
             
         case SETTING_ALERT_DURATION:
-            if (increase && settings->alertDuration < 60) {
-                settings->alertDuration += 1;
-            } else if (!increase && settings->alertDuration > 1) {
-                settings->alertDuration -= 1;
+            if (increase && settings->alertDuration < 300) {
+                settings->alertDuration += 30;
+            } else if (!increase && settings->alertDuration > 30) {
+                settings->alertDuration -= 30;
             }
             adjustmentValue = settings->alertDuration;
-            Serial.printf("提醒时长: %d 分钟\n", settings->alertDuration);
+            Serial.printf("提醒时长: %d 秒\n", settings->alertDuration);
+            break;
+            
+        case SETTING_DEVICE_PAIRING:
+            if (increase) {
+                // 开始设备配对
+                extern void startDevicePairing();
+                startDevicePairing();
+                Serial.println("开始设备配对...");
+            } else {
+                // 清除配对设备
+                extern void clearPairedDevice();
+                clearPairedDevice();
+                Serial.println("清除配对设备...");
+            }
             break;
             
         default:
