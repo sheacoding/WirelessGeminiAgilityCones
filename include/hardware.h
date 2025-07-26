@@ -10,9 +10,7 @@
 #include "config.h"
 
 // 包含中文字体支持
-#ifdef FORCE_MASTER_ROLE
 #include "u8g2_wqy.h"
-#endif
 
 // 硬件管理类
 class HardwareManager {
@@ -55,7 +53,15 @@ public:
     void displayStatus(const char* status);
     void displayResult(unsigned long time, const char* result);
     void displayTrainingStatus(unsigned long totalTime, unsigned long lastTime);
+    void displayTrainingDetailedStatus(float currentTime, int sessionCount, bool isConnected, int batteryLevel, int signalStrength, bool isMaster);
     void displayHistoryData();
+    
+    // 训练数据管理
+    void addTrainingRecord(uint32_t duration, uint8_t mode, bool completed);
+    void calculateTrainingStats();
+    TrainingStats* getTrainingStats();
+    void initializeTrainingData();
+    void createWeeklyTrainingData();
     void displaySystemSettings();
     void displaySystemSettingsMenu(int selectedIndex);
     void displaySystemSettingsDetail(SettingsItems item, int value = 0);
@@ -63,6 +69,7 @@ public:
     void displayBrightnessAdjustment(int brightness);
     void displayDateTimeAdjustment(int year, int month, int day, int hour, int minute);
     void displayAlertDurationAdjustment(int duration);
+    void displayDevicePairing(PairingStatus status, DiscoveredDevice* devices, int deviceCount, int selectedIndex);
     
     // 系统设置管理
     void initializeSettings();
@@ -75,14 +82,13 @@ public:
     
 private:
     CRGB leds[LED_COUNT];
-#ifdef FORCE_MASTER_ROLE
     U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2;
-#endif
     
     unsigned long lastVibrationTime;
     
     void updateVibration();
     unsigned long formatTime(unsigned long ms);
+    void drawTrendGraph(); // 绘制趋势图表
 };
 
 extern HardwareManager hardware;
