@@ -47,6 +47,7 @@ public:
     void displayInit();
     void displayClear();
     void displayText(const char* text, int x = 0, int y = 0, int size = 1);
+    void displayTextCentered(const char* text, int y = 35);  // 居中显示文本的便捷函数
     void displayMainMenu(const char* items[], int selectedIndex, int itemCount);
     void displayMenu(const char* items[], int selectedIndex, int itemCount);
     void displayTimer(unsigned long time);

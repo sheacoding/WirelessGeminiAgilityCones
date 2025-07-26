@@ -262,7 +262,7 @@ void VibrationTrainingManager::showReadyCountdown() {
     for (int i = TIMING_READY_DELAY_MS / 1000; i > 0; --i) {
         char countStr[4];
         sprintf(countStr, "%d", i);
-        hardware.displayText(countStr, 60, 40, 2);
+        hardware.displayTextCentered(countStr, 40);
         delay(1000);
     }
 }
@@ -373,6 +373,6 @@ void VibrationTrainingManager::displayDailyStats() {
     sprintf(statsText, "Today's Training\nSessions: %d\nTotal Time: %.1fs", 
             sessionCount, (totalTrainingTime + elapsedTime) / 1000.0);
     
-    hardware.displayText(statsText, 0, 0, 1);
+    hardware.displayTextCentered(statsText, 30);
     delay(3000);
 }

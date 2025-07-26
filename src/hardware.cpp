@@ -192,6 +192,25 @@ void HardwareManager::displayClear() {
 
 void HardwareManager::displayText(const char* text, int x, int y, int size) {
     displayClear();
+    
+    // 如果x为负值，表示需要居中显示
+    if (x < 0) {
+        int textWidth = u8g2.getUTF8Width(text);
+        x = (128 - textWidth) / 2;  // 128是OLED屏幕宽度
+    }
+    
+    u8g2.setCursor(x, y);
+    u8g2.print(text);
+    u8g2.sendBuffer();
+}
+
+void HardwareManager::displayTextCentered(const char* text, int y) {
+    displayClear();
+    
+    // 自动计算居中位置
+    int textWidth = u8g2.getUTF8Width(text);
+    int x = (128 - textWidth) / 2;
+    
     u8g2.setCursor(x, y);
     u8g2.print(text);
     u8g2.sendBuffer();
@@ -259,25 +278,32 @@ void HardwareManager::displayMenu(const char* items[], int selectedIndex, int it
 void HardwareManager::displayTimer(unsigned long time) {
     char buf[16];
     sprintf(buf, "时间: %lu", time / 1000);
-    displayText(buf, 0, 15);
+    displayText(buf, -1, 20);  // 使用-1表示居中显示
 }
 
 void HardwareManager::displayStatus(const char* status) {
-    displayText(status, 0, 30);
+    displayText(status, -1, 35);  // 使用-1表示居中显示
 }
 
 void HardwareManager::displayResult(unsigned long time, const char* result) {
     displayClear();
     
-    // 显示时间
-    char buf[16];
-    sprintf(buf, "时间: %lu", time / 1000);
-    u8g2.setCursor(0, 15);
+    // 显示时间 - 居中
+    char buf[32];
+    sprintf(buf, "时间: %.3f 秒", time / 1000.0);
+    int timeWidth = u8g2.getUTF8Width(buf);
+    int timeX = (128 - timeWidth) / 2;
+    u8g2.setCursor(timeX, 20);
     u8g2.print(buf);
     
-    // 显示结果
-    u8g2.setCursor(0, 30);
+    // 显示结果 - 居中
+    int resultWidth = u8g2.getUTF8Width(result);
+    int resultX = (128 - resultWidth) / 2;
+    u8g2.setCursor(resultX, 40);
     u8g2.print(result);
+    
+    // 添加装饰线
+    u8g2.drawHLine(10, 50, 108);
     
     u8g2.sendBuffer();
 }
@@ -318,55 +344,56 @@ void HardwareManager::displayTrainingStatus(unsigned long totalTime, unsigned lo
         u8g2.drawDisc(118, 8, 3);
     }
     
-    // 总时长显示 - 小字体
+    // 总时长显示 - 居中对齐
     u8g2.setFont(u8g2_font_6x10_tf);
     char totalBuf[32];
     unsigned long totalSeconds = totalTime / 1000;
     sprintf(totalBuf, "总时长: %02lu:%02lu:%02lu", totalSeconds / 3600, (totalSeconds % 3600) / 60, totalSeconds % 60);
-    u8g2.setCursor(10, 28);
+    int totalWidth = u8g2.getUTF8Width(totalBuf);
+    u8g2.setCursor((128 - totalWidth) / 2, 28);
     u8g2.print(totalBuf);
     
-    // 上次用时显示 - 小字体
+    // 上次用时显示 - 居中对齐
     char lastBuf[32];
     if (lastTime > 0) {
         sprintf(lastBuf, "上次: %.3f秒", lastTime / 1000.0);
     } else {
         sprintf(lastBuf, "上次: --.-秒");
     }
-    u8g2.setCursor(10, 40);
+    int lastWidth = u8g2.getUTF8Width(lastBuf);
+    u8g2.setCursor((128 - lastWidth) / 2, 40);
     u8g2.print(lastBuf);
     
-    // 动画进度条 - 增强视觉效果
+    // 动画进度条 - 居中
     static int progressAnimFrame = 0;
     progressAnimFrame = (progressAnimFrame + 2) % 216; // 双倍速度循环
     
-    // 进度条背景
-    u8g2.drawFrame(10, 47, 108, 8);
+    // 进度条背景 - 居中对齐
+    int progressBarWidth = 100;
+    int progressBarX = (128 - progressBarWidth) / 2;
+    u8g2.drawFrame(progressBarX, 47, progressBarWidth, 8);
     
     // 动态进度条 - 基于训练时长的活跃度
     unsigned long currentTime = millis();
-    int barWidth = 54 + 30 * sin(currentTime / 800.0); // 更慢的动画
-    if (barWidth > 106) barWidth = 106;
+    int barWidth = 50 + 30 * sin(currentTime / 800.0); // 更慢的动画
+    if (barWidth > progressBarWidth - 2) barWidth = progressBarWidth - 2;
     if (barWidth < 15) barWidth = 15;
-    u8g2.drawBox(11, 48, barWidth, 6);
+    u8g2.drawBox(progressBarX + 1, 48, barWidth, 6);
     
     // 添加进度条内的动态点
-    int dotPos = 15 + (progressAnimFrame * 90 / 216);
-    if (dotPos < barWidth - 5) {
+    int dotPos = progressBarX + 10 + (progressAnimFrame * (progressBarWidth - 20) / 216);
+    if (dotPos < progressBarX + barWidth - 5) {
         u8g2.setDrawColor(0); // 反色
         u8g2.drawDisc(dotPos, 51, 2);
         u8g2.setDrawColor(1); // 恢复正常色
     }
     
-    // 训练状态文字
+    // 训练状态文字 - 居中
     u8g2.setFont(u8g2_font_5x7_tf);
     const char* statusText = "等待运动检测...";
-    u8g2.setCursor(10, 63);
+    int statusWidth = u8g2.getUTF8Width(statusText);
+    u8g2.setCursor((128 - statusWidth) / 2, 63);
     u8g2.print(statusText);
-    
-    // 连接状态指示
-    u8g2.setCursor(90, 63);
-    u8g2.print("已连接");
     
     u8g2.setFont(u8g2_font_wqy12_t_gb2312a); // 恢复默认字体
     u8g2.sendBuffer();
@@ -452,7 +479,7 @@ void HardwareManager::displayHistoryData() {
     // 使用小字体显示统计数据
     u8g2.setFont(u8g2_font_6x10_tf);
     
-    // 总时长显示 (格式: HH:MM:SS)
+    // 总时长显示 (格式: HH:MM:SS) - 左对齐
     uint32_t totalHours = trainingStats.totalTrainingTime / 3600000;
     uint32_t totalMinutes = (trainingStats.totalTrainingTime % 3600000) / 60000;
     uint32_t totalSeconds = (trainingStats.totalTrainingTime % 60000) / 1000;
@@ -460,19 +487,20 @@ void HardwareManager::displayHistoryData() {
     u8g2.setCursor(10, 28);
     u8g2.printf("总时长: %02lu:%02lu:%02lu", totalHours, totalMinutes, totalSeconds);
     
-    // 平均时间显示 (格式: X.XXXs)
+    // 平均时间显示 (格式: X.XXXs) - 同行右侧
+    u8g2.setCursor(10, 40);
     if (trainingStats.averageTime > 0) {
         u8g2.printf("平均: %.3fs", trainingStats.averageTime / 1000.0);
     } else {
-        u8g2.print("平均: --");
+        u8g2.print("平均: --.-s");
     }
     
-    // 本周进步显示 (带箭头图标)
+    // 本周进步显示 (带箭头图标) - 左对齐
     u8g2.setCursor(10, 52);
     const char* progressIcon = trainingStats.progressIncreasing ? "↑" : "↓";
     u8g2.printf("本周进步: %s%.1f%%", progressIcon, abs((int)trainingStats.weeklyProgress) / 100.0);
     
-    // 绘制简单趋势图 (折线图)
+    // 绘制简单趋势图 (折线图) - 原始位置
     // 模拟8个数据点的趋势线
     int graphPoints[][2] = {{10,58}, {25,56}, {40,53}, {55,51}, {70,49}, {85,46}, {100,44}, {115,41}};
     
@@ -489,7 +517,7 @@ void HardwareManager::displayHistoryData() {
     // 坐标轴
     u8g2.drawHLine(10, 63, 108);
     
-    // 底部标签
+    // 底部标签 - 原始位置
     u8g2.setFont(u8g2_font_4x6_tf);
     u8g2.setCursor(58, 63);
     u8g2.print("本周趋势");
